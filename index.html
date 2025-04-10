@@ -52,13 +52,12 @@
         <div class="custom-songs">
             <h2>Lady Gaga - MAYHEM Custom Play</h2>
             <ul>
-                <li>Disease</li>
-                <li>Abracadabra</li>
+                <li data-video="media/disease.mp4">Disease</li>
+                <li data-video="media/abracadabra.mp4">Abracadabra</li>
                 <li>Garden of Eden</li>
                 <li>Perfect Celebrity</li>
                 <li>Vanish Into You</li>
                 <li>Killah (feat. Gesaffelstein)</li>
-                <!-- More songs can be added here later -->
             </ul>
         </div>
 
@@ -70,23 +69,89 @@
         const stationName = document.getElementById('stationName');
         const playButton = document.getElementById('playButton');
         const stationList = document.getElementById('stationList');
+        const customSongsList = document.querySelector('.custom-songs ul');
+        const playArea = document.createElement('div'); // This will be where we display the video
 
-        const stations = {
-            '88.0': { name: 'Classic FM', stream: 'http://www.classicfm.bg/live' },
-            '89.1': { name: 'Z-Rock', stream: 'http://www.zrockradio.bg/live' },
-            '89.5': { name: 'Radio Energy', stream: 'http://www.radioenergy.bg/live' },
-            '91.9': { name: 'BG Radio', stream: 'http://www.bgradio.bg/live' },
-            '92.4': { name: 'Radio Magic FM', stream: 'http://www.magic.bg/live' },
-            '93.4': { name: 'Radio Melody', stream: 'http://www.melodybg.com/live' },
-            '96.7': { name: 'Radio Veronika', stream: 'http://www.radioveronika.bg/live' },
-            '98.3': { name: 'Radio 1 Rock', stream: 'http://www.radio1rock.bg/live' },
-            '100.3': { name: 'Radio Fresh', stream: 'http://www.radiofresh.bg/live' },
-            '101.7': { name: 'Radio Nova', stream: 'http://www.radionova.bg/live' },
-            '106.9': { name: 'N-JOY', stream: 'http://www.njoy.bg/live' }
+        // Add the playArea div to the main container (you can change the position and style later as needed)
+        document.querySelector('.main-container').appendChild(playArea);
+
+        // Variable to track the background video
+        let backgroundVideo = null;
+        let isVideoPlaying = false; // Track if video is playing
+
+        // Function to change background video
+        const changeBackground = (videoFile) => {
+            if (backgroundVideo) {
+                backgroundVideo.style.opacity = '0'; // Fade out the current background
+                setTimeout(() => {
+                    backgroundVideo.remove(); // Remove after fade out
+                    backgroundVideo = null; // Reset background video
+                }, 1000); // Wait for the fade-out animation
+            }
+
+            if (videoFile) {
+                // Create a new background video element
+                backgroundVideo = document.createElement('video');
+                backgroundVideo.src = videoFile;
+                backgroundVideo.autoplay = true;
+                backgroundVideo.loop = true;
+                backgroundVideo.muted = true; // Optional: mute the video
+                backgroundVideo.style.position = 'fixed';
+                backgroundVideo.style.top = '0';
+                backgroundVideo.style.left = '0';
+                backgroundVideo.style.width = '100%';
+                backgroundVideo.style.height = '100%';
+                backgroundVideo.style.zIndex = '-1'; // Ensure it's behind content
+                backgroundVideo.style.objectFit = 'cover'; // Ensure it covers the screen
+                backgroundVideo.style.transition = 'opacity 1s ease-in-out';
+                backgroundVideo.style.opacity = '0'; // Start hidden
+
+                // Add the video to the body
+                document.body.appendChild(backgroundVideo);
+
+                // Fade it in
+                setTimeout(() => {
+                    backgroundVideo.style.opacity = '1';
+                }, 100); // Slight delay to ensure the video is loaded before fading in
+            }
         };
 
+        // Listen for clicks on custom songs
+        customSongsList.addEventListener('click', (e) => {
+            if (e.target.tagName === 'LI' && e.target.dataset.video) {
+                const videoFile = e.target.dataset.video;
+
+                // If the video is already playing, remove it
+                if (isVideoPlaying) {
+                    changeBackground('');
+                    isVideoPlaying = false;
+                } else {
+                    changeBackground(videoFile);
+                    isVideoPlaying = true;
+                }
+            }
+        });
+
+        // Listen for clicks on station list
+        stationList.addEventListener('click', (e) => {
+            if (e.target.tagName === 'LI') {
+                const freq = parseFloat(e.target.dataset.freq).toFixed(1);
+                const videoFile = `media/station-background-${freq}.mp4`; // You can customize these paths for each station
+
+                // If the video is already playing, remove it
+                if (isVideoPlaying) {
+                    changeBackground('');
+                    isVideoPlaying = false;
+                } else {
+                    changeBackground(videoFile);
+                    isVideoPlaying = true;
+                }
+            }
+        });
+
+        // Existing frequency slider logic
         let currentStream = new Audio(stations['88.0'].stream);
-        let isPlaying = false;  // This will track whether the audio is playing or paused
+        let isPlaying = false;
 
         slider.addEventListener('input', () => {
             const freq = parseFloat(slider.value).toFixed(1);
@@ -109,11 +174,11 @@
                 if (!isPlaying) {
                     currentStream.play();
                     playButton.textContent = '⏸️ Pause';
-                    isPlaying = true;  // Mark the audio as playing
+                    isPlaying = true;
                 } else {
                     currentStream.pause();
                     playButton.textContent = '🔊 Play';
-                    isPlaying = false;  // Mark the audio as paused
+                    isPlaying = false;
                 }
             }
         });
@@ -127,11 +192,11 @@
                 if (station) {
                     stationName.textContent = station.name;
                     currentStream.src = station.stream;
-                    if (isPlaying) { // If the audio is playing, keep it playing when switching stations
+                    if (isPlaying) {
                         currentStream.play();
                         playButton.textContent = '⏸️ Pause';
                     } else {
-                        playButton.textContent = '🔊 Play'; // If paused, show the play button
+                        playButton.textContent = '🔊 Play';
                     }
                 }
             }
