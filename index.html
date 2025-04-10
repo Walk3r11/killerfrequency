@@ -21,7 +21,11 @@
                 <input type="range" min="88.0" max="108.0" step="0.1" value="88.0" class="slider" id="frequencySlider">
                 <button class="play-button" id="playButton">🔊 Play</button>
                 <div class="equalizer">
-                    <div></div><div></div><div></div><div></div><div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
                 </div>
             </div>
         </div>
@@ -82,6 +86,7 @@
         };
 
         let currentStream = new Audio(stations['88.0'].stream);
+        let isPlaying = false;  // This will track whether the audio is playing or paused
 
         slider.addEventListener('input', () => {
             const freq = parseFloat(slider.value).toFixed(1);
@@ -90,6 +95,9 @@
             if (station) {
                 stationName.textContent = station.name;
                 currentStream.src = station.stream;
+                if (isPlaying) { // If the audio is playing, keep it playing when switching stations
+                    currentStream.play();
+                }
             } else {
                 stationName.textContent = 'Unknown Station';
                 currentStream.src = '';
@@ -98,12 +106,14 @@
 
         playButton.addEventListener('click', () => {
             if (currentStream.src) {
-                if (currentStream.paused) {
+                if (!isPlaying) {
                     currentStream.play();
                     playButton.textContent = '⏸️ Pause';
+                    isPlaying = true;  // Mark the audio as playing
                 } else {
                     currentStream.pause();
                     playButton.textContent = '🔊 Play';
+                    isPlaying = false;  // Mark the audio as paused
                 }
             }
         });
@@ -117,11 +127,16 @@
                 if (station) {
                     stationName.textContent = station.name;
                     currentStream.src = station.stream;
-                    currentStream.play();
-                    playButton.textContent = '⏸️ Pause';
+                    if (isPlaying) { // If the audio is playing, keep it playing when switching stations
+                        currentStream.play();
+                        playButton.textContent = '⏸️ Pause';
+                    } else {
+                        playButton.textContent = '🔊 Play'; // If paused, show the play button
+                    }
                 }
             }
         });
+
     </script>
 </body>
 
