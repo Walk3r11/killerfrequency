@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <title>Killer Frequency</title>
+</head>
+
+<body>
+    <div class="stars"></div>
+    <div class="main-container">
+        <div class="container">
+            <h1>Killer Frequency</h1>
+            <div class="radio">
+                <div class="frequency-ring">
+                    <div class="frequency-display" id="frequencyDisplay">88.0 FM</div>
+                    <div class="station-name" id="stationName">Classic FM</div>
+                </div>
+                <input type="range" min="88.0" max="108.0" step="0.1" value="88.0" class="slider" id="frequencySlider">
+                <button class="play-button" id="playButton">🔊 Play</button>
+                <div class="equalizer">
+                    <div></div><div></div><div></div><div></div><div></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Station List on the right -->
+        <div class="station-list" id="stationList">
+            <h2>📡 Available Stations</h2>
+            <ul>
+                <li data-freq="88.0">88.0 FM - Classic FM</li>
+                <li data-freq="89.1">89.1 FM - Z-Rock</li>
+                <li data-freq="89.5">89.5 FM - Radio Energy</li>
+                <li data-freq="91.9">91.9 FM - BG Radio</li>
+                <li data-freq="92.4">92.4 FM - Magic FM</li>
+                <li data-freq="93.4">93.4 FM - Melody</li>
+                <li data-freq="96.7">96.7 FM - Veronika</li>
+                <li data-freq="98.3">98.3 FM - Radio 1 Rock</li>
+                <li data-freq="100.3">100.3 FM - Radio Fresh</li>
+                <li data-freq="101.7">101.7 FM - Radio Nova</li>
+                <li data-freq="106.9">106.9 FM - N-JOY</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const slider = document.getElementById('frequencySlider');
+        const display = document.getElementById('frequencyDisplay');
+        const stationName = document.getElementById('stationName');
+        const playButton = document.getElementById('playButton');
+        const stationList = document.getElementById('stationList');
+
+        const stations = {
+            '88.0': { name: 'Classic FM', stream: 'http://www.classicfm.bg/live' },
+            '89.1': { name: 'Z-Rock', stream: 'http://www.zrockradio.bg/live' },
+            '89.5': { name: 'Radio Energy', stream: 'http://www.radioenergy.bg/live' },
+            '91.9': { name: 'BG Radio', stream: 'http://www.bgradio.bg/live' },
+            '92.4': { name: 'Radio Magic FM', stream: 'http://www.magic.bg/live' },
+            '93.4': { name: 'Radio Melody', stream: 'http://www.melodybg.com/live' },
+            '96.7': { name: 'Radio Veronika', stream: 'http://www.radioveronika.bg/live' },
+            '98.3': { name: 'Radio 1 Rock', stream: 'http://www.radio1rock.bg/live' },
+            '100.3': { name: 'Radio Fresh', stream: 'http://www.radiofresh.bg/live' },
+            '101.7': { name: 'Radio Nova', stream: 'http://www.radionova.bg/live' },
+            '106.9': { name: 'N-JOY', stream: 'http://www.njoy.bg/live' }
+        };
+
+        let currentStream = new Audio(stations['88.0'].stream);
+
+        slider.addEventListener('input', () => {
+            const freq = parseFloat(slider.value).toFixed(1);
+            display.textContent = `${freq} FM`;
+            const station = stations[freq];
+            if (station) {
+                stationName.textContent = station.name;
+                currentStream.src = station.stream;
+            } else {
+                stationName.textContent = 'Unknown Station';
+                currentStream.src = '';
+            }
+        });
+
+        playButton.addEventListener('click', () => {
+            if (currentStream.src) {
+                if (currentStream.paused) {
+                    currentStream.play();
+                    playButton.textContent = '⏸️ Pause';
+                } else {
+                    currentStream.pause();
+                    playButton.textContent = '🔊 Play';
+                }
+            }
+        });
+
+        stationList.addEventListener('click', (e) => {
+            if (e.target.tagName === 'LI') {
+                const freq = parseFloat(e.target.dataset.freq).toFixed(1);
+                slider.value = freq;
+                display.textContent = `${freq} FM`;
+                const station = stations[freq];
+                if (station) {
+                    stationName.textContent = station.name;
+                    currentStream.src = station.stream;
+                    currentStream.play();
+                    playButton.textContent = '⏸️ Pause';
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
