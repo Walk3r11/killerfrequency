@@ -62,7 +62,6 @@
         </div>
 
     </div>
-
     <script>
         const slider = document.getElementById('frequencySlider');
         const display = document.getElementById('frequencyDisplay');
@@ -70,89 +69,61 @@
         const playButton = document.getElementById('playButton');
         const stationList = document.getElementById('stationList');
         const customSongsList = document.querySelector('.custom-songs ul');
-        const playArea = document.createElement('div'); // This will be where we display the video
-
-        // Add the playArea div to the main container (you can change the position and style later as needed)
+        const playArea = document.createElement('div');
         document.querySelector('.main-container').appendChild(playArea);
-
-        // Variable to track the background video
+    
+        const stations = {
+            '88.0': { name: 'Classic FM', stream: 'http://www.classicfm.bg/live' },
+            '89.1': { name: 'Z-Rock', stream: 'http://www.zrockradio.bg/live' },
+            '89.5': { name: 'Radio Energy', stream: 'http://www.radioenergy.bg/live' },
+            '91.9': { name: 'BG Radio', stream: 'http://www.bgradio.bg/live' },
+            '92.4': { name: 'Radio Magic FM', stream: 'http://www.magic.bg/live' },
+            '93.4': { name: 'Radio Melody', stream: 'http://www.melodybg.com/live' },
+            '96.7': { name: 'Radio Veronika', stream: 'http://www.radioveronika.bg/live' },
+            '98.3': { name: 'Radio 1 Rock', stream: 'http://www.radio1rock.bg/live' },
+            '100.3': { name: 'Radio Fresh', stream: 'http://www.radiofresh.bg/live' },
+            '101.7': { name: 'Radio Nova', stream: 'http://www.radionova.bg/live' },
+            '106.9': { name: 'N-JOY', stream: 'http://www.njoy.bg/live' }
+        };
+    
         let backgroundVideo = null;
-        let isVideoPlaying = false; // Track if video is playing
-
-        // Function to change background video
+        let isVideoPlaying = false;
+    
         const changeBackground = (videoFile) => {
             if (backgroundVideo) {
-                backgroundVideo.style.opacity = '0'; // Fade out the current background
+                backgroundVideo.style.opacity = '0';
                 setTimeout(() => {
-                    backgroundVideo.remove(); // Remove after fade out
-                    backgroundVideo = null; // Reset background video
-                }, 1000); // Wait for the fade-out animation
+                    backgroundVideo.remove();
+                    backgroundVideo = null;
+                }, 1000);
             }
-
+    
             if (videoFile) {
-                // Create a new background video element
                 backgroundVideo = document.createElement('video');
                 backgroundVideo.src = videoFile;
                 backgroundVideo.autoplay = true;
                 backgroundVideo.loop = true;
-                backgroundVideo.muted = true; // Optional: mute the video
+                backgroundVideo.muted = true;
                 backgroundVideo.style.position = 'fixed';
                 backgroundVideo.style.top = '0';
                 backgroundVideo.style.left = '0';
                 backgroundVideo.style.width = '100%';
                 backgroundVideo.style.height = '100%';
-                backgroundVideo.style.zIndex = '-1'; // Ensure it's behind content
-                backgroundVideo.style.objectFit = 'cover'; // Ensure it covers the screen
+                backgroundVideo.style.zIndex = '-1';
+                backgroundVideo.style.objectFit = 'cover';
                 backgroundVideo.style.transition = 'opacity 1s ease-in-out';
-                backgroundVideo.style.opacity = '0'; // Start hidden
-
-                // Add the video to the body
+                backgroundVideo.style.opacity = '0';
+    
                 document.body.appendChild(backgroundVideo);
-
-                // Fade it in
                 setTimeout(() => {
                     backgroundVideo.style.opacity = '1';
-                }, 100); // Slight delay to ensure the video is loaded before fading in
+                }, 100);
             }
         };
-
-        // Listen for clicks on custom songs
-        customSongsList.addEventListener('click', (e) => {
-            if (e.target.tagName === 'LI' && e.target.dataset.video) {
-                const videoFile = e.target.dataset.video;
-
-                // If the video is already playing, remove it
-                if (isVideoPlaying) {
-                    changeBackground('');
-                    isVideoPlaying = false;
-                } else {
-                    changeBackground(videoFile);
-                    isVideoPlaying = true;
-                }
-            }
-        });
-
-        // Listen for clicks on station list
-        stationList.addEventListener('click', (e) => {
-            if (e.target.tagName === 'LI') {
-                const freq = parseFloat(e.target.dataset.freq).toFixed(1);
-                const videoFile = `media/station-background-${freq}.mp4`; // You can customize these paths for each station
-
-                // If the video is already playing, remove it
-                if (isVideoPlaying) {
-                    changeBackground('');
-                    isVideoPlaying = false;
-                } else {
-                    changeBackground(videoFile);
-                    isVideoPlaying = true;
-                }
-            }
-        });
-
-        // Existing frequency slider logic
-        let currentStream = new Audio(stations['88.0'].stream);
+    
+        let currentStream = new Audio();
         let isPlaying = false;
-
+    
         slider.addEventListener('input', () => {
             const freq = parseFloat(slider.value).toFixed(1);
             display.textContent = `${freq} FM`;
@@ -160,15 +131,13 @@
             if (station) {
                 stationName.textContent = station.name;
                 currentStream.src = station.stream;
-                if (isPlaying) { // If the audio is playing, keep it playing when switching stations
-                    currentStream.play();
-                }
+                if (isPlaying) currentStream.play();
             } else {
                 stationName.textContent = 'Unknown Station';
                 currentStream.src = '';
             }
         });
-
+    
         playButton.addEventListener('click', () => {
             if (currentStream.src) {
                 if (!isPlaying) {
@@ -182,26 +151,53 @@
                 }
             }
         });
-
+    
+        let fileHandle = null;
+    
+        async function saveStationToFile(stationName) {
+            try {
+                if (!fileHandle) {
+                    fileHandle = await window.showSaveFilePicker({
+                        suggestedName: 'station.txt',
+                        types: [{
+                            description: 'Text File',
+                            accept: { 'text/plain': ['.txt'] }
+                        }]
+                    });
+                }
+                const writable = await fileHandle.createWritable();
+                await writable.write(stationName);
+                await writable.close();
+                console.log(`Saved station: ${stationName}`);
+            } catch (err) {
+                console.error('File write cancelled or failed:', err);
+            }
+        }
+    
         stationList.addEventListener('click', (e) => {
             if (e.target.tagName === 'LI') {
                 const freq = parseFloat(e.target.dataset.freq).toFixed(1);
                 slider.value = freq;
-                display.textContent = `${freq} FM`;
+                slider.dispatchEvent(new Event('input'));
+    
+                const videoFile = `media/station-background-${freq}.mp4`;
+                changeBackground(videoFile);
+                isVideoPlaying = true;
+    
                 const station = stations[freq];
                 if (station) {
-                    stationName.textContent = station.name;
-                    currentStream.src = station.stream;
-                    if (isPlaying) {
-                        currentStream.play();
-                        playButton.textContent = '⏸️ Pause';
-                    } else {
-                        playButton.textContent = '🔊 Play';
-                    }
+                    saveStationToFile(station.name);
                 }
             }
         });
-
+    
+        customSongsList.addEventListener('click', (e) => {
+            if (e.target.tagName === 'LI' && e.target.dataset.video) {
+                const videoFile = e.target.dataset.video;
+                changeBackground(videoFile);
+                isVideoPlaying = true;
+            }
+        });
     </script>
 </body>
 
